@@ -2,33 +2,47 @@
 
 (function () {
 
+  const tourStorageKeys = [
+    'dashboardTour',
+    'configTour',
+    'contactsTour',
+    'segmentsNewTour',
+    'segmentsOverviewTour',
+    'campaignsTour',
+    'emailsTour',
+    'marketingMessagesTour',
+    'focusItemsTour',
+    'assetsTour',
+    'formsTour',
+    'landingPagesTour',
+    'dynamicContentTour',
+    'pointActionsTour',
+    'pointTriggersTour',
+    'pointGroupsTour',
+    'stagesTour',
+    'reportsTour',
+    'tagsTour',
+  ];
+
   /**
   * Resets all tours by clearing stored progress and restarting the current tour.
   *
   * Use this function to debug from the beginning.
   */
   window.resetTour = function () {
-    // If there's a current tour, complete it.
-    if (window.currentTour) {
-      window.currentTour.complete();
+    tourStorageKeys.forEach(tourKey => {
+      sessionStorage.removeItem(`${tourKey}Step`);
+      localStorage.removeItem(`${tourKey}Completed`);
+    });
+
+    const activeTour = window.Shepherd && window.Shepherd.activeTour
+      ? window.Shepherd.activeTour
+      : window.currentTour;
+    if (activeTour) {
+      activeTour.cancel();
     }
 
-    // Remove the current step from sessionStorage for all tours.
-    Object.keys(sessionStorage).forEach(key => {
-      if (key.endsWith('Step')) {
-        sessionStorage.removeItem(key);
-      }
-    });
-
-    // Remove the completed tour status from localStorage for all tours.
-    Object.keys(localStorage).forEach(key => {
-      if (key.endsWith('Completed')) {
-        localStorage.removeItem(key);
-      }
-    });
-
-    // Re-initialize the tour for the current page.
-    urlTrigger();
+    triggerTour(window.location.pathname.toString());
   }
 
   // Dashboard tour
@@ -61,7 +75,6 @@
         { text: 'Back', action: () => window.currentTour.back() },
         { text: 'Next', action: () => window.currentTour.next() }
       ],
-      beforeShowPromise: () => lazyElement('form[name="daterange"]'),
     },
     {
       id: 'dashboard3',
@@ -107,7 +120,6 @@
           }
         }
       ],
-      beforeShowPromise: () => lazyElement('.navbar-right [data-toggle*="sidebar"]'),
     },
   ];
 
@@ -128,7 +140,6 @@
           mQuery('a[href="#trackingconfig"]').click();
         }
       }],
-      beforeShowPromise: () => lazyElement('a[href="#trackingconfig"]'),
     },
     {
       id: 'config2',
@@ -142,10 +153,6 @@
         { text: 'Back', action: () => window.currentTour.back() },
         { text: 'Next', action: () => window.currentTour.next() }
       ],
-      beforeShowPromise: () => {
-        // Using lazyElement with a 400ms delay
-        return lazyElement('#trackingconfig .panel:first-of-type pre', 400);
-      },
     },
     {
       id: 'config3',
@@ -254,8 +261,7 @@
         element: '#leadlist_name',
         on: 'right'
       },
-      buttons: [{ text: 'Next', action: () => window.currentTour.next() }],
-      beforeShowPromise: () => lazyElement('#leadlist_name')
+      buttons: [{ text: 'Next', action: () => window.currentTour.next() }]
     },
     {
       id: 'segmentsNew2',
@@ -317,8 +323,7 @@
         action: function () {
           window.currentTour.next();
         }
-      }],
-      beforeShowPromise: () => lazyElement('#available_segment_filters_chosen .chosen-default', 400)
+      }]
     },
     {
       id: 'segmentsNew6',
@@ -331,8 +336,7 @@
       buttons: [
         { text: 'Back', action: () => window.currentTour.back() },
         { text: 'Next', action: () => window.currentTour.next() }
-      ],
-      beforeShowPromise: () => lazyElement('#leadlist_filters .panel')
+      ]
     },
     {
       id: 'segmentsNew7',
@@ -730,7 +734,7 @@
     }
 
     if (tourSteps !== null && tourSteps.length > 0) {
-      window.currentTour = new Shepherd.Tour({
+      window.currentTour = new window.Shepherd.Tour({
         defaultStepOptions: {
           cancelIcon: { enabled: true },
           classes: 'shepherd-theme-default',
@@ -739,7 +743,7 @@
       });
 
       tourSteps.forEach(step => {
-        window.currentTour.addStep(step);
+        window.currentTour.addStep(prepareStep(window.currentTour, tourKey, step));
       });
 
       const currentStep = sessionStorage.getItem(`${tourKey}Step`);
@@ -761,17 +765,30 @@
 
   }
 
-  function init() {
+  function triggerTour(currentPath) {
+    try {
+      urlTrigger({ currentPath });
+    } catch (error) {
+      console.error('[ProductTour] failed to start tour', currentPath, error);
+    }
+  }
 
-    // this will simply fire when dom is ready, after a page load
-    urlTrigger({ currentPath: window.location.pathname.toString() });
+  function init() {
+    if (window.productTourInitialized) {
+      return;
+    }
+    window.productTourInitialized = true;
+
+    if (!window.Shepherd || typeof window.Shepherd.Tour !== 'function') {
+      console.warn('[ProductTour] Shepherd is not available');
+      return;
+    }
 
     // this will listen for url changes done with JS
     // in case of Ajax navigation
     window.history.pushState = new Proxy(window.history.pushState, {
       apply: (target, thisArg, argArray) => {
-        const [state, title, url] = argArray;
-        const newUrl = url;
+        const [, , newUrl] = argArray;
 
         // If there's a current tour, cancel it
         if (window.currentTour && window.location.pathname.toString() !== newUrl) {
@@ -779,60 +796,108 @@
         }
 
         // start new tour, if there is one on the new url
-        urlTrigger({ currentPath: newUrl });
+        triggerTour(newUrl);
 
         return target.apply(thisArg, argArray);
       }
     });
 
+    // this will simply fire when dom is ready, after a page load
+    triggerTour(window.location.pathname.toString());
+
   };
 
-  /**
- * Waits for an element matching the selector to appear in the DOM.
- *
- * @param {string} selector - CSS selector for the element.
- * @param {number} [delay=0] - Optional delay in milliseconds before checking for the element.
- * @returns {Promise<Object>} Promise resolving to the mQuery object of the found element.
- *
- * Handles dynamically loaded content in Mautic pages like importing contacts.
- */
-  function lazyElement(selector, delay = 0) {
-    return new Promise((resolve) => {
-      const checkElement = () => {
-        const element = mQuery(selector);
-        if (element.length) {
-          resolve(element);
-          return true;
-        }
-        return false;
-      };
+  function findVisibleElement(selector) {
+    const elements = document.querySelectorAll(selector);
 
-      const observeElement = () => {
-        // If the element is already present, resolve immediately
-        if (checkElement()) return;
-
-        // Create a MutationObserver to watch for changes in the DOM
-        const observer = new MutationObserver(() => {
-          if (checkElement()) {
-            observer.disconnect(); // Stop observing once the element is found
-          }
-        });
-
-        // Start observing the document body for added/removed nodes
-        observer.observe(document.body, {
-          childList: true,
-          subtree: true
-        });
-      };
-
-      // If delay is provided, wait before starting the observer
-      if (delay > 0) {
-        setTimeout(() => {
-          observeElement();
-        }, delay);
-      } else {
-        observeElement(); // No delay, start observing immediately
+    for (const element of elements) {
+      if (
+        element.getClientRects().length > 0
+        && window.getComputedStyle(element).visibility !== 'hidden'
+      ) {
+        return element;
       }
+    }
+
+    return null;
+  }
+
+  function prepareStep(tour, tourId, step) {
+    if (!step.attachTo || typeof step.attachTo.element !== 'string') {
+      return step;
+    }
+
+    const selector = step.attachTo.element;
+    let warningLogged = false;
+    const preparedStep = Object.assign({}, step);
+
+    preparedStep.attachTo = Object.assign({}, step.attachTo, {
+      element: () => findVisibleElement(selector)
+    });
+    preparedStep.beforeShowPromise = () => lazyElement(selector).then((element) => {
+      const currentStep = tour.getCurrentStep();
+      if (!tour.isActive() || !currentStep || currentStep.id !== step.id) {
+        // Keep stale steps pending so Shepherd cannot render them after navigation.
+        return new Promise(() => {});
+      }
+
+      if (element === null && !warningLogged) {
+        console.warn('[ProductTour] element not found', tourId, step.id, selector);
+        warningLogged = true;
+      }
+    });
+
+    return preparedStep;
+  }
+
+  /**
+   * Waits for a visible element matching the selector to appear in the DOM.
+   *
+   * @param {string} selector - CSS selector for the element.
+   * @param {number} [timeoutMs=5000] - Maximum wait in milliseconds.
+   * @returns {Promise<Element|null>} Promise resolving to the found element or null.
+   */
+  function lazyElement(selector, timeoutMs = 5000) {
+    return new Promise((resolve) => {
+      let observer = null;
+      let timeout = null;
+      let settled = false;
+
+      const finish = (element) => {
+        if (settled) {
+          return;
+        }
+        settled = true;
+
+        if (observer) {
+          observer.disconnect();
+        }
+        if (timeout !== null) {
+          clearTimeout(timeout);
+        }
+
+        resolve(element);
+      };
+
+      const element = findVisibleElement(selector);
+      if (element) {
+        finish(element);
+        return;
+      }
+
+      observer = new MutationObserver(() => {
+        const element = findVisibleElement(selector);
+        if (element) {
+          finish(element);
+        }
+      });
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true
+      });
+
+      timeout = setTimeout(() => finish(null), timeoutMs);
     });
   }
 
