@@ -68,8 +68,8 @@
       title: 'See essential information using widgets',
       text: 'These are the charts used to display data. As soon as information starts being collected, check them again.',
       attachTo: {
-        element: '.std-toolbar.btn-group',
-        on: 'bottom'
+        element: '#toolbar .std-toolbar',
+        on: 'bottom-end'
       },
       buttons: [
         { text: 'Back', action: () => window.currentTour.back() },
@@ -135,7 +135,7 @@
       title: 'Implement tracking on your website',
       text: 'Copy this code and paste it at the end of the body tag in your website.',
       attachTo: {
-        element: '#trackingconfig .panel-primary:first-child pre',
+        element: '#trackingconfig .panel:first-of-type pre',
         on: 'bottom'
       },
       buttons: [
@@ -144,7 +144,7 @@
       ],
       beforeShowPromise: () => {
         // Using lazyElement with a 400ms delay
-        return lazyElement('#trackingconfig .panel-primary:first-child pre', 400);
+        return lazyElement('#trackingconfig .panel:first-of-type pre', 400);
       },
     },
     {
@@ -202,7 +202,7 @@
       title: 'Import your contacts',
       text: 'Click on the arrow-button to open the menu and find "Import" to quickly bring leads or "Import history" to see previously imported contacts.',
       attachTo: {
-        element: 'button.btn.btn-nospin.dropdown-toggle', // Direct selector
+        element: '#page-list-wrapper .list-toolbar #page-list-actions', // Direct selector
         on: 'left'
       },
       buttons: [
@@ -275,7 +275,7 @@
       title: 'Activate segment',
       text: 'Make sure to put the segment as Active to use it later.',
       attachTo: {
-        element: '#leadlist_isPublished_1',
+        element: '#leadlist_isPublished_label',
         on: 'top'
       },
       buttons: [
