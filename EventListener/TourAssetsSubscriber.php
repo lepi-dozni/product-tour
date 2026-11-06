@@ -22,7 +22,6 @@ class TourAssetsSubscriber implements EventSubscriberInterface
         $assetsEvent->addScript('https://cdn.jsdelivr.net/npm/shepherd.js@10.0.1/dist/js/shepherd.min.js');
         $assetsEvent->addScript('https://cdn.jsdelivr.net/npm/@floating-ui/core@1.6.0');
         $assetsEvent->addScript('https://cdn.jsdelivr.net/npm/@floating-ui/dom@1.6.3');
-        $assetsEvent->addStylesheet('plugins/TrialToursBundle/Assets/css/tour.css');
         $assetsEvent->addStylesheet('https://cdn.jsdelivr.net/npm/shepherd.js@10.0.1/dist/css/shepherd.css');
     }
 }
