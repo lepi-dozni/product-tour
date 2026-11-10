@@ -1,0 +1,63 @@
+[
+  {
+    "token": "#trackingconfig",
+    "versions": ["6.0.9", "7.1.3"],
+    "reason": "The configuration tab pane id is generated from the configuration form key.",
+    "evidence": "ConfigBundle/Resources/views/Config/form.html.twig:58 id=\"{{ key }}\"",
+    "scope": ["PageBundle/Resources/views/FormTheme/Config/_config_trackingconfig_widget.html.twig"]
+  },
+  {
+    "token": "[href=\"#trackingconfig\"]",
+    "versions": ["6.0.9", "7.1.3"],
+    "reason": "The configuration tab link target is generated from the configuration form key.",
+    "evidence": "ConfigBundle/Resources/views/Config/form.html.twig:39 href=\"#{{ key }}\""
+  },
+  {
+    "token": "#leadlist_name",
+    "versions": ["6.0.9", "7.1.3"],
+    "reason": "Symfony generates the field id from the leadlist form prefix and name field.",
+    "evidence": "LeadBundle/Form/Type/ListType.php:42 (6.0.9), :45 (7.1.3) adds name; :173/:177 returns leadlist"
+  },
+  {
+    "token": "#leadlist_publicName",
+    "versions": ["6.0.9", "7.1.3"],
+    "reason": "Symfony generates the field id from the leadlist form prefix and publicName field.",
+    "evidence": "LeadBundle/Form/Type/ListType.php:52 (6.0.9), :55 (7.1.3) adds publicName; :173/:177 returns leadlist"
+  },
+  {
+    "token": "#leadlist_isPublished_1",
+    "versions": ["6.0.9", "7.1.3"],
+    "reason": "Symfony generates the yes-choice id from the leadlist form prefix and isPublished field.",
+    "evidence": "LeadBundle/Form/Type/ListType.php:124 (6.0.9), :128 (7.1.3) adds isPublished; :173/:177 returns leadlist"
+  },
+  {
+    "token": "#leadlist_isPublished_label",
+    "versions": ["6.0.9", "7.1.3"],
+    "reason": "The form theme appends _label to the generated isPublished field id.",
+    "evidence": "CoreBundle/Resources/views/FormTheme/mautic_form_layout.html.twig:595 id=\"{{ id }}_label\"; ListType.php:124/:128 adds isPublished"
+  },
+  {
+    "token": "#available_segment_filters_chosen",
+    "versions": ["6.0.9", "7.1.3"],
+    "reason": "Chosen appends _chosen to the enhanced available_segment_filters select id.",
+    "evidence": "LeadBundle/Resources/views/List/form.html.twig:72 id=\"available_segment_filters\" class=\"chosen form-control\""
+  },
+  {
+    "token": ".chosen-default",
+    "versions": ["6.0.9", "7.1.3"],
+    "reason": "Chosen adds this runtime class to the enhanced select placeholder.",
+    "evidence": "CoreBundle/Assets/css/libraries/chosen/bootstrap-chosen.less:494 styles .chosen-default"
+  },
+  {
+    "token": "#leadlist_buttons_apply_toolbar",
+    "versions": ["6.0.9", "7.1.3"],
+    "reason": "Mautic clones the generated apply button into the toolbar and appends _toolbar to its id.",
+    "evidence": "CoreBundle/Assets/js/1a.content.js:551 (6.0.9), :559 (7.1.3) appends _toolbar; ListType.php:150/:154 adds buttons"
+  },
+  {
+    "token": "[href*=\"segments/new\"]",
+    "versions": ["6.0.9", "7.1.3"],
+    "reason": "The New link href is generated from the segment route base.",
+    "evidence": "LeadBundle/Resources/views/List/list.html.twig:27-28 configures the new template button with routeBase segment"
+  }
+]
